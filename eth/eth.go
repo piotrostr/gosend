@@ -1,12 +1,14 @@
 package eth
 
 import (
+	"bufio"
 	"context"
 	"crypto/ecdsa"
 	"fmt"
 	"log"
 	"math/big"
 	"os"
+	"strings"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
@@ -70,7 +72,34 @@ func (eth *Eth) UpdateBalance() {
 	eth.balance = balance
 }
 
-func (eth *Eth) Send() {
+func ask() bool {
+	reader := bufio.NewReader(os.Stdin)
+	for {
+		s, _ := reader.ReadString('\n')
+		s = strings.TrimSuffix(s, "\n")
+		s = strings.ToLower(s)
+		if len(s) > 1 {
+			fmt.Fprintln(os.Stderr, "Please enter Y or N")
+			continue
+		}
+		if strings.Compare(s, "n") == 0 {
+			return false
+		} else if strings.Compare(s, "y") == 0 {
+			break
+		} else {
+			continue
+		}
+	}
+	return true
+}
+
+func (eth *Eth) Send(qty string, to string) {
+	fmt.Println("Sending", qty, "to", to)
+	fmt.Println("Go for it? [Y/n]")
+	if !ask() {
+		return
+	}
+
 	nonce, err := eth.client.PendingNonceAt(ctx, *eth.address)
 	if err != nil {
 		log.Fatal(err)

@@ -3,6 +3,7 @@ package cmd
 import (
 	"os"
 
+	ethereum "github.com/piotrostr/gosend/eth"
 	"github.com/spf13/cobra"
 )
 
@@ -11,9 +12,13 @@ import (
 var rootCmd = &cobra.Command{
 	Use:   "gosend",
 	Short: "send ethereum from command-line",
-	Long:  "TODO: Long description",
 	Run: func(cmd *cobra.Command, args []string) {
-		cmd.Help()
+		qty := cmd.Flag("qty").Value.String()
+		to := cmd.Flag("to").Value.String()
+		// TODO validate here
+		eth := ethereum.Eth{}
+		eth.Init()
+		eth.Send(qty, to)
 	},
 }
 
@@ -25,5 +30,9 @@ func Execute() {
 }
 
 func init() {
-	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	rootCmd.Flags().StringP("qty", "q", "", "quantity in eth as per 1 or 0.15")
+	rootCmd.MarkFlagRequired("qty")
+
+	rootCmd.Flags().StringP("to", "t", "", "address to send to")
+	rootCmd.MarkFlagRequired("to")
 }
