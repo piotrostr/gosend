@@ -6,6 +6,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// quantity in eth as per 1 or 0.15
+// display a confirmation with usd/pln equivalent
 var rootCmd = &cobra.Command{
 	Use:   "gosend",
 	Short: "send ethereum from command-line",
