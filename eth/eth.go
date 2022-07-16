@@ -3,10 +3,12 @@ package eth
 import (
 	"context"
 	"crypto/ecdsa"
+	"encoding/json"
 	"fmt"
 	"log"
 	"math/big"
 	"os"
+	"time"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
@@ -102,8 +104,32 @@ func (eth *Eth) Send(qty string, to string) {
 
 	err = eth.client.SendTransaction(ctx, tx)
 	if err != nil {
-		log.Println(err)
+		log.Fatal(err)
 	}
+
+	_, isPending, err := eth.client.TransactionByHash(ctx, tx.Hash())
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	if isPending {
+		fmt.Println("Transaction is pending")
+	}
+	for isPending {
+		_, isPending, err = eth.client.TransactionByHash(ctx, tx.Hash())
+		if err != nil {
+			log.Fatal(err)
+		}
+		fmt.Print(".")
+		time.Sleep(1 * time.Second) // add cooldown var
+	}
+
+	rec, err := eth.client.TransactionReceipt(ctx, tx.Hash())
+	if err != nil {
+		log.Fatal(err)
+	}
+	pretty, _ := json.MarshalIndent(rec, "", "  ")
+	fmt.Printf("Receipt: %+v\n", string(pretty))
 
 	eth.UpdateBalance()
 	fmt.Println("PostTxBalance:", eth.balance, "wei")
