@@ -21,7 +21,7 @@ var ctx = context.TODO()
 func getEnv(variable string) string {
 	val, exists := os.LookupEnv(variable)
 	if !exists {
-		log.Fatal("env var not found")
+		log.Fatalf("env var %s not found", variable)
 	}
 
 	return val
@@ -35,11 +35,25 @@ type Eth struct {
 	balance *big.Int
 }
 
-func (eth *Eth) Init() {
-	// TODO switch/case chain here to choose right infura url
-	client, err := ethclient.Dial("http://localhost:8545")
-	if err != nil {
-		log.Fatal(err)
+func (eth *Eth) Init(chainName string) {
+	var client *ethclient.Client
+	var err error
+	switch chainName {
+	case "mainnet":
+	case "rinkeby":
+		rawUrl := "https://%s.infura.io/v3/%s"
+		url := fmt.Sprintf(rawUrl, chainName, getEnv("INFURA_KEY"))
+		client, err = ethclient.Dial(url)
+		if err != nil {
+			log.Fatal(err)
+		}
+	case "localhost":
+		client, err = ethclient.Dial("http://localhost:8545")
+		if err != nil {
+			log.Fatal(err)
+		}
+	default:
+		log.Fatalf("chain %s not supported", chainName)
 	}
 	eth.client = client
 

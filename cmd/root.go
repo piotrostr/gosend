@@ -39,14 +39,16 @@ var rootCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		qty := cmd.Flag("qty").Value.String()
 		to := cmd.Flag("to").Value.String()
-		// TODO validate here and parse eth to wei
-		// verify address as well as the chainId (add param too)
+		chain := cmd.Flag("chain").Value.String()
+		// TODO verify address as well as the chainId
 		eth := ethereum.Eth{}
-		eth.Init()
-		rawMsg := "Sending %s (%d wei) to %s\n"
-		fmt.Printf(rawMsg, qty, ethereum.EthStringToWei(qty), to)
+		eth.Init(chain)
+		rawMsg := "Sending %s to %s on %s\n"
+		fmt.Printf(rawMsg, qty, to, chain)
+
 		fmt.Println("Go for it? [Y/n]")
 		if !ask() {
+			fmt.Println("Aborted")
 			return
 		}
 
@@ -62,9 +64,15 @@ func Execute() {
 }
 
 func init() {
-	rootCmd.Flags().StringP("qty", "q", "", "quantity in eth as per 1 or 0.15")
+	rootCmd.Flags().String("qty", "", "quantity in eth as per 1 or 0.15")
 	rootCmd.MarkFlagRequired("qty")
 
-	rootCmd.Flags().StringP("to", "t", "", "address to send to")
+	rootCmd.Flags().String("to", "", "address to send to")
 	rootCmd.MarkFlagRequired("to")
+
+	rootCmd.Flags().String(
+		"chain",
+		"localhost",
+		"chain to send on (mainnet or rinkeby, defaults to localhost)",
+	)
 }
