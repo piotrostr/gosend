@@ -2,10 +2,13 @@ package cmd
 
 import (
 	"bufio"
+	"context"
 	"fmt"
+	"log"
 	"os"
 	"strings"
 
+	"github.com/ethereum/go-ethereum/common"
 	ethereum "github.com/piotrostr/gosend/eth"
 	"github.com/spf13/cobra"
 )
@@ -37,22 +40,36 @@ var rootCmd = &cobra.Command{
 	Use:   "gosend",
 	Short: "send ethereum from command-line",
 	Run: func(cmd *cobra.Command, args []string) {
+		// parse flags
 		qty := cmd.Flag("qty").Value.String()
 		to := cmd.Flag("to").Value.String()
 		chain := cmd.Flag("chain").Value.String()
-		// TODO verify address as well as the chainId
+
+		// initialize eth client
 		eth := ethereum.Eth{}
 		eth.Init(chain)
-		rawMsg := "Sending %s to %s on %s\n"
-		fmt.Printf(rawMsg, qty, to, chain)
 
+		// parse and check address
+		addr := common.HexToAddress(to)
+		bytecode, err := eth.Client.CodeAt(context.Background(), addr, nil)
+		if err != nil {
+			log.Fatal(err)
+		}
+		isContract := len(bytecode) > 0
+
+		// print the tx data
+		rawMsg := "Sending %s to %s (is contract: %v) on %s\n"
+		fmt.Printf(rawMsg, qty, to, isContract, chain)
+
+		// double check with user
 		fmt.Println("Go for it? [Y/n]")
 		if !ask() {
 			fmt.Println("Aborted")
 			return
 		}
 
-		eth.Send(qty, to)
+		// send the tx
+		eth.Send(&addr, ethereum.EthStringToWei(qty))
 	},
 }
 

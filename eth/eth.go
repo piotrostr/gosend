@@ -29,35 +29,35 @@ func getEnv(variable string) string {
 
 type Eth struct {
 	chainId *big.Int
-	client  *ethclient.Client
+	Client  *ethclient.Client
 	prv     *ecdsa.PrivateKey
 	address *common.Address
 	balance *big.Int
 }
 
 func (eth *Eth) Init(chainName string) {
-	var client *ethclient.Client
+	var Client *ethclient.Client
 	var err error
 	switch chainName {
 	case "mainnet":
 	case "rinkeby":
 		rawUrl := "https://%s.infura.io/v3/%s"
 		url := fmt.Sprintf(rawUrl, chainName, getEnv("INFURA_KEY"))
-		client, err = ethclient.Dial(url)
+		Client, err = ethclient.Dial(url)
 		if err != nil {
 			log.Fatal(err)
 		}
 	case "localhost":
-		client, err = ethclient.Dial("http://localhost:8545")
+		Client, err = ethclient.Dial("http://localhost:8545")
 		if err != nil {
 			log.Fatal(err)
 		}
 	default:
 		log.Fatalf("chain %s not supported", chainName)
 	}
-	eth.client = client
+	eth.Client = Client
 
-	chainId, err := client.NetworkID(ctx)
+	chainId, err := Client.NetworkID(ctx)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -80,31 +80,30 @@ func (eth *Eth) Init(chainName string) {
 }
 
 func (eth *Eth) UpdateBalance() {
-	balance, err := eth.client.BalanceAt(ctx, *eth.address, nil)
+	balance, err := eth.Client.BalanceAt(ctx, *eth.address, nil)
 	if err != nil {
 		log.Fatal(err)
 	}
 	eth.balance = balance
 }
 
-func (eth *Eth) Send(qty string, to string) {
-	nonce, err := eth.client.PendingNonceAt(ctx, *eth.address)
+func (eth *Eth) Send(to *common.Address, qty *big.Int) {
+	nonce, err := eth.Client.PendingNonceAt(ctx, *eth.address)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	gasPrice, err := eth.client.SuggestGasPrice(ctx)
+	gasPrice, err := eth.Client.SuggestGasPrice(ctx)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	value := big.NewInt(100000000000000)
 	txdata := &types.LegacyTx{
 		Nonce:    nonce,
 		Gas:      21000,
 		GasPrice: gasPrice,
-		To:       eth.address,
-		Value:    value,
+		To:       to,
+		Value:    qty,
 		Data:     []byte{},
 	}
 	tx, _ := types.SignNewTx(
@@ -116,12 +115,12 @@ func (eth *Eth) Send(qty string, to string) {
 		log.Fatal(err)
 	}
 
-	err = eth.client.SendTransaction(ctx, tx)
+	err = eth.Client.SendTransaction(ctx, tx)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	_, isPending, err := eth.client.TransactionByHash(ctx, tx.Hash())
+	_, isPending, err := eth.Client.TransactionByHash(ctx, tx.Hash())
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -130,7 +129,7 @@ func (eth *Eth) Send(qty string, to string) {
 		fmt.Println("Transaction is pending")
 	}
 	for isPending {
-		_, isPending, err = eth.client.TransactionByHash(ctx, tx.Hash())
+		_, isPending, err = eth.Client.TransactionByHash(ctx, tx.Hash())
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -138,7 +137,7 @@ func (eth *Eth) Send(qty string, to string) {
 		time.Sleep(1 * time.Second) // add cooldown var
 	}
 
-	rec, err := eth.client.TransactionReceipt(ctx, tx.Hash())
+	rec, err := eth.Client.TransactionReceipt(ctx, tx.Hash())
 	if err != nil {
 		log.Fatal(err)
 	}
