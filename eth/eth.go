@@ -60,7 +60,7 @@ func (eth *Eth) Init() {
 
 	fmt.Println("ChainID:", eth.chainId)
 	fmt.Println("Address:", eth.address.Hex())
-	fmt.Println("Balance:", eth.balance)
+	fmt.Println("Balance:", eth.balance, "wei")
 }
 
 func (eth *Eth) UpdateBalance() {
@@ -106,5 +106,5 @@ func (eth *Eth) Send(qty string, to string) {
 	}
 
 	eth.UpdateBalance()
-	fmt.Println("PostTxBalance:", eth.balance)
+	fmt.Println("PostTxBalance:", eth.balance, "wei")
 }

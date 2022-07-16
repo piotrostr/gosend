@@ -3,7 +3,6 @@ package cmd
 import (
 	"bufio"
 	"fmt"
-	"math/big"
 	"os"
 	"strings"
 
@@ -41,11 +40,11 @@ var rootCmd = &cobra.Command{
 		qty := cmd.Flag("qty").Value.String()
 		to := cmd.Flag("to").Value.String()
 		// TODO validate here and parse eth to wei
-		// verify address as wellas the chainId (add param too)
-		// qtyWei := new(big.Int).Mul(big.NewFloat())
+		// verify address as well as the chainId (add param too)
 		eth := ethereum.Eth{}
 		eth.Init()
-		fmt.Println("Sending", qty, "to", to)
+		rawMsg := "Sending %s (%d wei) to %s\n"
+		fmt.Printf(rawMsg, qty, ethereum.EthStringToWei(qty), to)
 		fmt.Println("Go for it? [Y/n]")
 		if !ask() {
 			return
