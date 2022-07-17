@@ -41,8 +41,7 @@ func (eth *Eth) Init(chainName string) {
 	var client *ethclient.Client
 	var err error
 	switch chainName {
-	case "mainnet":
-	case "rinkeby":
+	case "mainnet", "rinkeby":
 		rawUrl := "https://%s.infura.io/v3/%s"
 		url := fmt.Sprintf(rawUrl, chainName, getEnv("INFURA_KEY"))
 		client, err = ethclient.Dial(url)
